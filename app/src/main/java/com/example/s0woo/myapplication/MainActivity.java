@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity{
                 }
                 else {
                     //System.out.println("입력성공");
-                    Toast.makeText(getApplicationContext(), "입력성공." + str, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
 
                     TMapData tmapdata = new TMapData();
 
