@@ -102,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
     public EditText editStop1;
     public ImageButton btnStop1;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,27 +117,35 @@ public class MainActivity extends AppCompatActivity {
         btnStop1 = (ImageButton)findViewById(R.id.stop1Btn);
 
 
-
         mMapView = new TMapView(this);
         configureMapView();
 
-
+        //출발지
         btnStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editStart.getText().toString();
 
+                final String name[] = new String[7];
+                final String address[] = new String[7];
+                final String point[] = new String[7];
+
+                final String StartName;
+                final String StartAddress;
+                final String StartPoint;
+
                 if (str == null || str.length() == 0) {
-                    Toast.makeText(getApplicationContext(), "입력값이 필요합니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 }
 
                 else {
-                    Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
 
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
                         @Override
                         public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
+
                             for (int i = 0; i < 7; i++) {
                                 TMapPOIItem item = poiItem.get(i);
 
@@ -147,28 +153,33 @@ public class MainActivity extends AppCompatActivity {
                                         "Address: " + item.getPOIAddress().replace("null", "")  + ", " +
                                         "Point: " + item.getPOIPoint().toString());
 
+                                name[i] = item.getPOIName().toString();
+                                address[i] = item.getPOIAddress().replace("null", "");
+                                point[i] = item.getPOIPoint().toString();
+
+                                System.out.println(name[i] + " " +address[i] + " " + point[i]);
                             }
                         }
                     });
-
                 }
-
             }
         });
 
 
 
-
+        //도착지
         btnFinish.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editFinish.getText().toString();
                 if (str == null || str.length() == 0) {
-                    Toast.makeText(getApplicationContext(), "입력값이 필요합니다.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "도착지를 입력해주세요.", Toast.LENGTH_LONG).show();
                 }
 
             }
         });
 
+
+        //경유지1
         btnStop1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editStop1.getText().toString();
