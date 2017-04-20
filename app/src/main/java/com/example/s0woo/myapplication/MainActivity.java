@@ -1,5 +1,6 @@
 package com.example.s0woo.myapplication;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -102,6 +103,12 @@ public class MainActivity extends AppCompatActivity {
     public EditText editStop1;
     public ImageButton btnStop1;
 
+    final static int ACT_EDIT = 0;
+
+    DBLocationList locationList;
+    SQLiteDatabase db;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
         mMapView = new TMapView(this);
         configureMapView();
 
+        final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
         //출발지
         btnStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -128,10 +137,6 @@ public class MainActivity extends AppCompatActivity {
                 final String name[] = new String[7];
                 final String address[] = new String[7];
                 final String point[] = new String[7];
-
-                final String StartName;
-                final String StartAddress;
-                final String StartPoint;
 
                 if (str == null || str.length() == 0) {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
@@ -158,10 +163,44 @@ public class MainActivity extends AppCompatActivity {
                                 point[i] = item.getPOIPoint().toString();
 
                                 System.out.println(name[i] + " " +address[i] + " " + point[i]);
+
+
                             }
+                            System.out.println("이름0 " + name[0]);
+                            intent.putExtra("Name0", name[0]);
+                            //startActivityForResult(intent,ACT_EDIT);
                         }
                     });
+
+                    /*
+
+                    System.out.println("OK");
+
+                    System.out.println("OK");
+                    startActivityForResult(intent, ACT_EDIT);
+                    System.out.println("OK");
+
+*/
+                    /*
+                    intent.putExtra("Name1", name[1]);
+                    intent.putExtra("Name2", name[2]);
+                    intent.putExtra("Name3", name[3]);
+                    intent.putExtra("Name4", name[4]);
+                    intent.putExtra("Name5", name[5]);
+                    intent.putExtra("Name6", name[6]);
+
+                    intent.putExtra("Address0", address[0]);
+                    intent.putExtra("Address1", address[1]);
+                    intent.putExtra("Address2", address[2]);
+                    intent.putExtra("Address3", address[3]);
+                    intent.putExtra("Address4", address[4]);
+                    intent.putExtra("Address5", address[5]);
+                    intent.putExtra("Address6", address[6]);*/
+
+
                 }
+
+
             }
         });
 
@@ -190,4 +229,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode, data);
+
+        final String StartName;
+        final String StartAddress;
+        final String StartPoint;
+
+        if(requestCode==ACT_EDIT && resultCode==RESULT_OK) {
+
+        }
+    }
+
+
 }
