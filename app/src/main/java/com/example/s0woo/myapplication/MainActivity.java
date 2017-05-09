@@ -1,5 +1,6 @@
 package com.example.s0woo.myapplication;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
@@ -108,41 +109,49 @@ public class MainActivity extends AppCompatActivity {
     DBLocationList locationList;
     SQLiteDatabase db;
 
+    final String StartName[] = new String[7];
+    final String StartAddress[] = new String[7];
+    final String StartPoint[] = new String[7];
+
+    final String FinishName[] = new String[7];
+    final String FinishAddress[] = new String[7];
+    final String FinishPoint[] = new String[7];
+
+    final String Stop1Name[] = new String[7];
+    final String Stop1Address[] = new String[7];
+    final String Stop1Point[] = new String[7];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        editStart = (EditText)findViewById(R.id.startEdit);
-        btnStart = (ImageButton)findViewById(R.id.startBtn);
+        editStart = (EditText) findViewById(R.id.startEdit);
+        btnStart = (ImageButton) findViewById(R.id.startBtn);
 
-        editFinish = (EditText)findViewById(R.id.finishEdit);
-        btnFinish = (ImageButton)findViewById(R.id.finishBtn);
+        editFinish = (EditText) findViewById(R.id.finishEdit);
+        btnFinish = (ImageButton) findViewById(R.id.finishBtn);
 
-        editStop1 = (EditText)findViewById(R.id.stop1Edit);
-        btnStop1 = (ImageButton)findViewById(R.id.stop1Btn);
+        editStop1 = (EditText) findViewById(R.id.stop1Edit);
+        btnStop1 = (ImageButton) findViewById(R.id.stop1Btn);
 
 
         mMapView = new TMapView(this);
         configureMapView();
 
-        final Intent intent = new Intent(MainActivity.this, SubActivity.class);
 
         //출발지
         btnStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editStart.getText().toString();
 
-                final String name[] = new String[7];
-                final String address[] = new String[7];
-                final String point[] = new String[7];
+                final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
+
 
                 if (str == null || str.length() == 0) {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
-                }
-
-                else {
+                } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
 
                     TMapData tmapdata = new TMapData();
@@ -155,93 +164,179 @@ public class MainActivity extends AppCompatActivity {
                                 TMapPOIItem item = poiItem.get(i);
 
                                 LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
-                                        "Address: " + item.getPOIAddress().replace("null", "")  + ", " +
+                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
                                         "Point: " + item.getPOIPoint().toString());
 
-                                name[i] = item.getPOIName().toString();
-                                address[i] = item.getPOIAddress().replace("null", "");
-                                point[i] = item.getPOIPoint().toString();
-
-                                System.out.println(name[i] + " " +address[i] + " " + point[i]);
-
-
+                                StartName[i] = item.getPOIName().toString();
+                                StartAddress[i] = item.getPOIAddress().replace("null", "");
+                                StartPoint[i] = item.getPOIPoint().toString();
                             }
-                            System.out.println("이름0 " + name[0]);
-                            intent.putExtra("Name0", name[0]);
-                            //startActivityForResult(intent,ACT_EDIT);
+
+                            intent.putExtra("Name0", StartName[0]);
+                            intent.putExtra("Name1", StartName[1]);
+                            intent.putExtra("Name2", StartName[2]);
+                            intent.putExtra("Name3", StartName[3]);
+                            intent.putExtra("Name4", StartName[4]);
+                            intent.putExtra("Name5", StartName[5]);
+                            intent.putExtra("Name6", StartName[6]);
+
+                            intent.putExtra("Address0", StartAddress[0]);
+                            intent.putExtra("Address1", StartAddress[1]);
+                            intent.putExtra("Address2", StartAddress[2]);
+                            intent.putExtra("Address3", StartAddress[3]);
+                            intent.putExtra("Address4", StartAddress[4]);
+                            intent.putExtra("Address5", StartAddress[5]);
+                            intent.putExtra("Address6", StartAddress[6]);
+                            startActivityForResult(intent, ACT_EDIT);
                         }
                     });
-
-                    /*
-
-                    System.out.println("OK");
-
-                    System.out.println("OK");
-                    startActivityForResult(intent, ACT_EDIT);
-                    System.out.println("OK");
-
-*/
-                    /*
-                    intent.putExtra("Name1", name[1]);
-                    intent.putExtra("Name2", name[2]);
-                    intent.putExtra("Name3", name[3]);
-                    intent.putExtra("Name4", name[4]);
-                    intent.putExtra("Name5", name[5]);
-                    intent.putExtra("Name6", name[6]);
-
-                    intent.putExtra("Address0", address[0]);
-                    intent.putExtra("Address1", address[1]);
-                    intent.putExtra("Address2", address[2]);
-                    intent.putExtra("Address3", address[3]);
-                    intent.putExtra("Address4", address[4]);
-                    intent.putExtra("Address5", address[5]);
-                    intent.putExtra("Address6", address[6]);*/
-
-
                 }
-
-
             }
         });
 
 
-
-        //도착지
         btnFinish.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editFinish.getText().toString();
+
+                final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
                 if (str == null || str.length() == 0) {
-                    Toast.makeText(getApplicationContext(), "도착지를 입력해주세요.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "도착지를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                } else {
+                    //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
+
+                    TMapData tmapdata = new TMapData();
+
+                    tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
+                        @Override
+                        public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
+
+                            for (int i = 0; i < 7; i++) {
+                                TMapPOIItem item = poiItem.get(i);
+
+                                LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
+                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                        "Point: " + item.getPOIPoint().toString());
+
+                                FinishName[i] = item.getPOIName().toString();
+                                FinishAddress[i] = item.getPOIAddress().replace("null", "");
+                                FinishPoint[i] = item.getPOIPoint().toString();
+                            }
+
+                            intent.putExtra("Name0", FinishName[0]);
+                            intent.putExtra("Name1", FinishName[1]);
+                            intent.putExtra("Name2", FinishName[2]);
+                            intent.putExtra("Name3", FinishName[3]);
+                            intent.putExtra("Name4", FinishName[4]);
+                            intent.putExtra("Name5", FinishName[5]);
+                            intent.putExtra("Name6", FinishName[6]);
+
+                            intent.putExtra("Address0", FinishAddress[0]);
+                            intent.putExtra("Address1", FinishAddress[1]);
+                            intent.putExtra("Address2", FinishAddress[2]);
+                            intent.putExtra("Address3", FinishAddress[3]);
+                            intent.putExtra("Address4", FinishAddress[4]);
+                            intent.putExtra("Address5", FinishAddress[5]);
+                            intent.putExtra("Address6", FinishAddress[6]);
+                            startActivityForResult(intent, ACT_EDIT);
+
+                        }
+                    });
                 }
 
             }
         });
 
 
-        //경유지1
         btnStop1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String str = editStop1.getText().toString();
+
+                final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
                 if (str == null || str.length() == 0) {
-                    Toast.makeText(getApplicationContext(), "입력값이 필요합니다.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "경유지를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                } else {
+                    //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
+
+                    TMapData tmapdata = new TMapData();
+
+                    tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
+                        @Override
+                        public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
+
+                            for (int i = 0; i < 7; i++) {
+                                TMapPOIItem item = poiItem.get(i);
+
+                                LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
+                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                        "Point: " + item.getPOIPoint().toString());
+
+                                Stop1Name[i] = item.getPOIName().toString();
+                                Stop1Address[i] = item.getPOIAddress().replace("null", "");
+                                Stop1Point[i] = item.getPOIPoint().toString();
+                            }
+
+                            intent.putExtra("Name0", Stop1Name[0]);
+                            intent.putExtra("Name1", Stop1Name[1]);
+                            intent.putExtra("Name2", Stop1Name[2]);
+                            intent.putExtra("Name3", Stop1Name[3]);
+                            intent.putExtra("Name4", Stop1Name[4]);
+                            intent.putExtra("Name5", Stop1Name[5]);
+                            intent.putExtra("Name6", Stop1Name[6]);
+
+                            intent.putExtra("Address0", Stop1Address[0]);
+                            intent.putExtra("Address1", Stop1Address[1]);
+                            intent.putExtra("Address2", Stop1Address[2]);
+                            intent.putExtra("Address3", Stop1Address[3]);
+                            intent.putExtra("Address4", Stop1Address[4]);
+                            intent.putExtra("Address5", Stop1Address[5]);
+                            intent.putExtra("Address6", Stop1Address[6]);
+                            startActivityForResult(intent, ACT_EDIT);
+
+
+                        }
+                    });
                 }
             }
         });
-
     }
 
-
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode,resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
 
-        final String StartName;
-        final String StartAddress;
-        final String StartPoint;
+        locationList = new DBLocationList(MainActivity.this, "LocationList.db", null, 1);
+        db = locationList.getWritableDatabase();
+        locationList.onCreate(db);
+        ContentValues values = new ContentValues();
 
-        if(requestCode==ACT_EDIT && resultCode==RESULT_OK) {
+        if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
+            for(int i=0; i<7;i++) {
+                if(StartName[i] == data.getStringExtra("OutName")) {
+                    values.put("idNumber", 1);
+                    values.put("name", StartName[i]);
+                    values.put("point", StartPoint[i]);
+                }
+            }
+
+            for(int i=0; i<7;i++) {
+                if(FinishName[i] == data.getStringExtra("OutName")) {
+                    values.put("idNumber", 2);
+                    values.put("name", FinishName[i]);
+                    values.put("point", FinishPoint[i]);
+                }
+            }
+
+            for(int i=0; i<7;i++) {
+                if(Stop1Name[i] == data.getStringExtra("OutName")) {
+                    values.put("idNumber", 3);
+                    values.put("name", Stop1Name[i]);
+                    values.put("point", Stop1Point[i]);
+
+                }
+            }
 
         }
     }
-
-
 }
