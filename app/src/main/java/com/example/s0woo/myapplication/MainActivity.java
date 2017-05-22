@@ -2,7 +2,7 @@ package com.example.s0woo.myapplication;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.renderscript.ScriptGroup;
+import android.database.Cursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,8 +17,7 @@ import com.skp.Tmap.TMapData.FindAllPOIListenerCallback;
 import com.skp.Tmap.TMapView;
 
 import java.lang.String;
-import android.util.Log;
-import java.util.logging.*;
+
 
 import java.util.ArrayList;
 import com.example.s0woo.myapplication.LogManager;
@@ -104,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
     public EditText editStop1;
     public ImageButton btnStop1;
 
+    public Button btnCar;
+
     final static int ACT_EDIT = 0;
 
     DBLocationList locationList;
@@ -111,15 +112,19 @@ public class MainActivity extends AppCompatActivity {
 
     final String StartName[] = new String[7];
     final String StartAddress[] = new String[7];
-    final String StartPoint[] = new String[7];
+    final double StartLatitude[] = new double[7];
+    final double StartLongitude[] = new double[7];
 
     final String FinishName[] = new String[7];
     final String FinishAddress[] = new String[7];
-    final String FinishPoint[] = new String[7];
+    final double FinishLatitude[] = new double[7];
+    final double FinishLongitude[] = new double[7];
 
     final String Stop1Name[] = new String[7];
     final String Stop1Address[] = new String[7];
-    final String Stop1Point[] = new String[7];
+    final double Stop1Latitude[] = new double[7];
+    final double Stop1Longitude[] = new double[7];
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +140,8 @@ public class MainActivity extends AppCompatActivity {
         editStop1 = (EditText) findViewById(R.id.stop1Edit);
         btnStop1 = (ImageButton) findViewById(R.id.stop1Btn);
 
+        btnCar = (Button) findViewById(R.id.Car);
+
 
         mMapView = new TMapView(this);
         configureMapView();
@@ -146,8 +153,6 @@ public class MainActivity extends AppCompatActivity {
                 String str = editStart.getText().toString();
 
                 final Intent intent = new Intent(MainActivity.this, SubActivity.class);
-
-
 
                 if (str == null || str.length() == 0) {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
@@ -167,9 +172,14 @@ public class MainActivity extends AppCompatActivity {
                                         "Address: " + item.getPOIAddress().replace("null", "") + ", " +
                                         "Point: " + item.getPOIPoint().toString());
 
+                                TMapPoint point = item.getPOIPoint();
+                                double Latitude = point.getLatitude();
+                                double Longitude = point.getLongitude();
+
                                 StartName[i] = item.getPOIName().toString();
                                 StartAddress[i] = item.getPOIAddress().replace("null", "");
-                                StartPoint[i] = item.getPOIPoint().toString();
+                                StartLatitude[i] = Latitude;
+                                StartLongitude[i] = Longitude;
                             }
 
                             intent.putExtra("Name0", StartName[0]);
@@ -219,9 +229,14 @@ public class MainActivity extends AppCompatActivity {
                                         "Address: " + item.getPOIAddress().replace("null", "") + ", " +
                                         "Point: " + item.getPOIPoint().toString());
 
+                                TMapPoint point = item.getPOIPoint();
+                                double Latitude = point.getLatitude();
+                                double Longitude = point.getLongitude();
+
                                 FinishName[i] = item.getPOIName().toString();
                                 FinishAddress[i] = item.getPOIAddress().replace("null", "");
-                                FinishPoint[i] = item.getPOIPoint().toString();
+                                FinishLatitude[i] = Latitude;
+                                FinishLongitude[i] = Longitude;
                             }
 
                             intent.putExtra("Name0", FinishName[0]);
@@ -244,7 +259,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-
             }
         });
 
@@ -273,9 +287,14 @@ public class MainActivity extends AppCompatActivity {
                                         "Address: " + item.getPOIAddress().replace("null", "") + ", " +
                                         "Point: " + item.getPOIPoint().toString());
 
+                                TMapPoint point = item.getPOIPoint();
+                                double Latituge = point.getLatitude();
+                                double Longitude = point.getLongitude();
+
                                 Stop1Name[i] = item.getPOIName().toString();
                                 Stop1Address[i] = item.getPOIAddress().replace("null", "");
-                                Stop1Point[i] = item.getPOIPoint().toString();
+                                Stop1Latitude[i] = Latituge;
+                                Stop1Longitude[i] = Longitude;
                             }
 
                             intent.putExtra("Name0", Stop1Name[0]);
@@ -294,15 +313,58 @@ public class MainActivity extends AppCompatActivity {
                             intent.putExtra("Address5", Stop1Address[5]);
                             intent.putExtra("Address6", Stop1Address[6]);
                             startActivityForResult(intent, ACT_EDIT);
-
-
                         }
                     });
                 }
             }
         });
+
+
+
+
+        btnCar.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                TMapData tmapdata = new TMapData();
+
+                String Name[] = new String[7];
+                int Index[] = new int[7];
+                double Latitude[] = new double[7];
+                double Longitude[] = new double[7];
+
+                //locationList = new DBLocationList(MainActivity.this, "LocationList.db", null, 1);
+                //db = locationList.getReadableDatabase();
+
+                Cursor c = db.query("LocationList", null, null, null, null, null, null, null);
+
+                while(c.moveToNext()) {
+                    for(int i=0; i<7; i++) {
+                        Name[i] = c.getString(c.getColumnIndex("name"));
+                        Index[i] = c.getInt(c.getColumnIndex("idNumber"));
+                        Latitude[i] = c.getDouble(c.getColumnIndex("latitude"));
+                        Longitude[i] = c.getDouble(c.getColumnIndex("longitude"));
+                    }
+                }
+
+                TMapPoint point0 = new TMapPoint(Latitude[0], Longitude[0]);
+                TMapPoint point1 = new TMapPoint(Latitude[1], Longitude[1]);
+
+                tmapdata.findPathData(point0, point1, new FindPathDataListenerCallback() {
+                   @Override
+                    public void onFindPathData(TMapPolyLine polyLine) {
+                       mMapView.addTMapPath(polyLine);
+                       LogManager.printLog(polyLine.toString());
+                    }
+                });
+
+            }
+        });
+
+
     }
 
+
+
+    //값 받아오기
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -312,28 +374,50 @@ public class MainActivity extends AppCompatActivity {
         ContentValues values = new ContentValues();
 
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
+            LogManager.printLog("standard : " + data.getStringExtra("OutName"));
+            String outputName = data.getStringExtra("OutName");
+
             for(int i=0; i<7;i++) {
-                if(StartName[i] == data.getStringExtra("OutName")) {
-                    values.put("idNumber", 1);
+                LogManager.printLog(i + "번째 이름 : " + StartName[i] );
+
+                if(outputName.equals(StartName[i])) {
+                    LogManager.printLog("start : " + data.getStringExtra("OutName"));
+                    String tempLatitude = "" + StartLatitude[i];
+                    String tempLongitude = "" + StartLongitude[i];
+                    values.put("idNumber", 0);
                     values.put("name", StartName[i]);
-                    values.put("point", StartPoint[i]);
+                    //values.put("latitude", tempLatitude);
+                   // values.put("longitude", tempLongitude);
+                    //db.insert(0, StartName[i], StartLatitude[i], StartLongitude[i]);
+                    db.insert("LocationList", null, values);
+                    LogManager.printLog("name : " + StartName[i] + " latitude: " + tempLatitude
+                    + " longitude : " + tempLongitude);
                 }
             }
 
             for(int i=0; i<7;i++) {
-                if(FinishName[i] == data.getStringExtra("OutName")) {
+                if(data.getStringExtra("OutName") == FinishName[i]) {
+                    LogManager.printLog("finish : " + data.getStringExtra("OutName"));
                     values.put("idNumber", 2);
                     values.put("name", FinishName[i]);
-                    values.put("point", FinishPoint[i]);
+                   // values.put("latitude", FinishLatitude[i]);
+                    //values.put("longitude", FinishLongitude[i]);
+                    db.insert("LocationList",null,values);
+                    LogManager.printLog("name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
+                            + " longitude : " + FinishLongitude[i]);
                 }
             }
 
             for(int i=0; i<7;i++) {
-                if(Stop1Name[i] == data.getStringExtra("OutName")) {
-                    values.put("idNumber", 3);
+                if(data.getStringExtra("OutName") == Stop1Name[i]) {
+                    LogManager.printLog("stop1 : " + data.getStringExtra("OutName"));
+                    values.put("idNumber", 1);
                     values.put("name", Stop1Name[i]);
-                    values.put("point", Stop1Point[i]);
-
+                   // values.put("latitude", Stop1Latitude[i]);
+                   // values.put("longitude", Stop1Longitude[i]);
+                    db.insert("LocationList",null,values);
+                    LogManager.printLog("name : " + Stop1Name[i] + " latitude: " + Stop1Latitude[i]
+                            + " longitude : " + Stop1Longitude[i]);
                 }
             }
 

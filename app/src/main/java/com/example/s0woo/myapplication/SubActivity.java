@@ -53,7 +53,7 @@ public class SubActivity extends AppCompatActivity {
         viewName1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName1.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }
@@ -62,7 +62,7 @@ public class SubActivity extends AppCompatActivity {
         viewName2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName2.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }
@@ -71,7 +71,7 @@ public class SubActivity extends AppCompatActivity {
         viewName3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName3.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }
@@ -80,7 +80,7 @@ public class SubActivity extends AppCompatActivity {
         viewName4.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName4.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }
@@ -89,7 +89,7 @@ public class SubActivity extends AppCompatActivity {
         viewName5.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName5.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }
@@ -98,7 +98,7 @@ public class SubActivity extends AppCompatActivity {
         viewName6.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent outIntent = getIntent();
-                outIntent.putExtra("OutName",viewName0.getText().toString());
+                outIntent.putExtra("OutName",viewName6.getText().toString());
                 setResult(RESULT_OK, outIntent);
                 finish();
             }

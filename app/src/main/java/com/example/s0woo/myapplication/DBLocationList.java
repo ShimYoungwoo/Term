@@ -19,9 +19,10 @@ public class DBLocationList extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "create table if not exists LocationList("
-                + "idNumber integer, "
-                + "name text, "
-                + "point double);";
+                + "idNumber integer,"
+                + "name text);";
+                //+ "latitude text,"
+               // + "longitude text"  + ");";
         db.execSQL(sql);
     }
 
@@ -33,14 +34,15 @@ public class DBLocationList extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void insert(int idNumber, String name, double point) {
+    public void insert(int idNumber, String name) {
         SQLiteDatabase db = getWritableDatabase();
         // DB에 입력한 값으로 행 추가
         /* db.execSQL(~sql문 입력~); */
         ContentValues values= new ContentValues();
         values.put("idNumber", idNumber);
         values.put("name", name);
-        values.put("point", point);
+       // values.put("latitude", latitude);
+       //values.put("longitude", longitude);
         db.insert("LocationList", null, values);
         db.close();
     }
