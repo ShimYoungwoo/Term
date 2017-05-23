@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     final static int ACT_EDIT = 0;
 
-    DBLocationList locationList;
+    LocationListDB locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
     SQLiteDatabase db;
 
     final String StartName[] = new String[7];
@@ -288,12 +288,12 @@ public class MainActivity extends AppCompatActivity {
                                         "Point: " + item.getPOIPoint().toString());
 
                                 TMapPoint point = item.getPOIPoint();
-                                double Latituge = point.getLatitude();
+                                double Latitude = point.getLatitude();
                                 double Longitude = point.getLongitude();
 
                                 Stop1Name[i] = item.getPOIName().toString();
                                 Stop1Address[i] = item.getPOIAddress().replace("null", "");
-                                Stop1Latitude[i] = Latituge;
+                                Stop1Latitude[i] = Latitude;
                                 Stop1Longitude[i] = Longitude;
                             }
 
@@ -331,34 +331,39 @@ public class MainActivity extends AppCompatActivity {
                 double Latitude[] = new double[7];
                 double Longitude[] = new double[7];
 
-                //locationList = new DBLocationList(MainActivity.this, "LocationList.db", null, 1);
-                //db = locationList.getReadableDatabase();
+                //locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
+                db = locationList.getWritableDatabase();
+                //locationList.onCreate(db);
 
-                Cursor c = db.query("LocationList", null, null, null, null, null, null, null);
+                //Cursor c = db.query("LctList", null, null, null, null, null, null);
+                Cursor c = db.rawQuery("SELECT * FROM LctList", null);
+                c.moveToFirst();
 
                 while(c.moveToNext()) {
+                    LogManager.printLog("while 실행 되는지 확인");
                     for(int i=0; i<7; i++) {
+                        LogManager.printLog("for " + i);
                         Name[i] = c.getString(c.getColumnIndex("name"));
                         Index[i] = c.getInt(c.getColumnIndex("idNumber"));
                         Latitude[i] = c.getDouble(c.getColumnIndex("latitude"));
                         Longitude[i] = c.getDouble(c.getColumnIndex("longitude"));
+                        LogManager.printLog(i + "번째 : " + Name[i] + " " + Index[i] + " " + Latitude[i] + " " + Longitude[i]);
                     }
                 }
 
                 TMapPoint point0 = new TMapPoint(Latitude[0], Longitude[0]);
                 TMapPoint point1 = new TMapPoint(Latitude[1], Longitude[1]);
 
-                tmapdata.findPathData(point0, point1, new FindPathDataListenerCallback() {
+                tmapdata.findPathData( point0, point1, new FindPathDataListenerCallback() {
                    @Override
                     public void onFindPathData(TMapPolyLine polyLine) {
                        mMapView.addTMapPath(polyLine);
-                       LogManager.printLog(polyLine.toString());
+                       LogManager.printLog("경로 ㅣ "  + polyLine.toString());
                     }
                 });
 
             }
         });
-
 
     }
 
@@ -368,56 +373,60 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        locationList = new DBLocationList(MainActivity.this, "LocationList.db", null, 1);
+        //locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
         db = locationList.getWritableDatabase();
         locationList.onCreate(db);
         ContentValues values = new ContentValues();
 
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
-            LogManager.printLog("standard : " + data.getStringExtra("OutName"));
+            LogManager.printLog("넘어온 값 : " + data.getStringExtra("OutName"));
             String outputName = data.getStringExtra("OutName");
 
             for(int i=0; i<7;i++) {
-                LogManager.printLog(i + "번째 이름 : " + StartName[i] );
-
                 if(outputName.equals(StartName[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
-                    String tempLatitude = "" + StartLatitude[i];
-                    String tempLongitude = "" + StartLongitude[i];
+                   // String tempLatitude = "" + StartLatitude[i];
+                   // String tempLongitude = "" + StartLongitude[i];
+                    values.put("latitude", StartLatitude[i]);
+                    values.put("longitude", StartLongitude[i]);
                     values.put("idNumber", 0);
                     values.put("name", StartName[i]);
-                    //values.put("latitude", tempLatitude);
-                   // values.put("longitude", tempLongitude);
-                    //db.insert(0, StartName[i], StartLatitude[i], StartLongitude[i]);
                     db.insert("LocationList", null, values);
-                    LogManager.printLog("name : " + StartName[i] + " latitude: " + tempLatitude
-                    + " longitude : " + tempLongitude);
+
+                   // LogManager.printLog("입력된 name : " + StartName[i] + " latitude: " + tempLatitude
+                    //+ " longitude : " + tempLongitude);
                 }
             }
 
             for(int i=0; i<7;i++) {
-                if(data.getStringExtra("OutName") == FinishName[i]) {
-                    LogManager.printLog("finish : " + data.getStringExtra("OutName"));
+                if(outputName.equals(FinishName[i])) {
+                    LogManager.printLog("start : " + data.getStringExtra("OutName"));
+                   // String tempLatitude = "" + FinishLatitude[i];
+                   // String tempLongitude = "" + FinishLongitude[i];
+                    values.put("latitude", FinishLatitude[i]);
+                    values.put("longitude", FinishLongitude[i]);
                     values.put("idNumber", 2);
                     values.put("name", FinishName[i]);
-                   // values.put("latitude", FinishLatitude[i]);
-                    //values.put("longitude", FinishLongitude[i]);
-                    db.insert("LocationList",null,values);
-                    LogManager.printLog("name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
-                            + " longitude : " + FinishLongitude[i]);
+                    db.insert("LocationList", null, values);
+
+                   // LogManager.printLog("입력된 name : " + FinishName[i] + " latitude: " + tempLatitude
+                   //         + " longitude : " + tempLongitude);
                 }
             }
 
             for(int i=0; i<7;i++) {
-                if(data.getStringExtra("OutName") == Stop1Name[i]) {
-                    LogManager.printLog("stop1 : " + data.getStringExtra("OutName"));
+                if(outputName.equals(Stop1Name[i])) {
+                    LogManager.printLog("start : " + data.getStringExtra("OutName"));
+                    //String tempLatitude = "" + Stop1Latitude[i];
+                   // String tempLongitude = "" + Stop1Longitude[i];
+                    values.put("latitude", Stop1Latitude[i]);
+                    values.put("longitude", Stop1Longitude[i]);
                     values.put("idNumber", 1);
                     values.put("name", Stop1Name[i]);
-                   // values.put("latitude", Stop1Latitude[i]);
-                   // values.put("longitude", Stop1Longitude[i]);
-                    db.insert("LocationList",null,values);
-                    LogManager.printLog("name : " + Stop1Name[i] + " latitude: " + Stop1Latitude[i]
-                            + " longitude : " + Stop1Longitude[i]);
+                    db.insert("LocationList", null, values);
+
+                    //LogManager.printLog("입력된 name : " + Stop1Name[i] + " latitude: " + tempLatitude
+                   //         + " longitude : " + tempLongitude);
                 }
             }
 
