@@ -9,79 +9,21 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.content.Intent;
+import android.widget.Button;
 
 import com.skp.Tmap.TMapData;
 import com.skp.Tmap.TMapPOIItem;
-import com.skp.Tmap.TMapTapi;
 import com.skp.Tmap.TMapData.FindAllPOIListenerCallback;
 import com.skp.Tmap.TMapView;
+import com.skp.Tmap.TMapPoint;
+
+import org.json.JSONArray;
 
 import java.lang.String;
-
-
+import java.net.URI;
 import java.util.ArrayList;
-import com.example.s0woo.myapplication.LogManager;
 
-import android.view.inputmethod.InputMethodManager;
-
-
-
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.PointF;
-import android.location.Location;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-
-import com.skp.Tmap.BizCategory;
-import com.skp.Tmap.TMapCircle;
-import com.skp.Tmap.TMapData;
-import com.skp.Tmap.TMapData.BizCategoryListenerCallback;
-import com.skp.Tmap.TMapData.ConvertGPSToAddressListenerCallback;
-import com.skp.Tmap.TMapData.FindAllPOIListenerCallback;
-import com.skp.Tmap.TMapData.FindAroundNamePOIListenerCallback;
-import com.skp.Tmap.TMapData.FindPathDataAllListenerCallback;
-import com.skp.Tmap.TMapData.FindPathDataListenerCallback;
-import com.skp.Tmap.TMapData.TMapPathType;
-import com.skp.Tmap.TMapGpsManager;
-import com.skp.Tmap.TMapGpsManager.onLocationChangedCallback;
-import com.skp.Tmap.TMapInfo;
-import com.skp.Tmap.TMapLabelInfo;
-import com.skp.Tmap.TMapMarkerItem;
-import com.skp.Tmap.TMapMarkerItem2;
-import com.skp.Tmap.TMapPOIItem;
-import com.skp.Tmap.TMapPoint;
-import com.skp.Tmap.TMapPolyLine;
-import com.skp.Tmap.TMapPolygon;
-import com.skp.Tmap.TMapTapi;
-import com.skp.Tmap.TMapView;
-import com.skp.Tmap.TMapView.MapCaptureImageListenerCallback;
-import com.skp.Tmap.TMapView.TMapLogoPositon;
-
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -107,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
     final static int ACT_EDIT = 0;
 
-    LocationListDB locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
-    SQLiteDatabase db;
+    DBLctList locationList = new DBLctList(MainActivity.this, "SavedLocation.db", null, 1);
+    SQLiteDatabase dbLct;
 
     final String StartName[] = new String[7];
     final String StartAddress[] = new String[7];
@@ -125,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     final double Stop1Latitude[] = new double[7];
     final double Stop1Longitude[] = new double[7];
 
+    int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-
+                    count++;
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
@@ -215,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "도착지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-
+                    count++;
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
@@ -273,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "경유지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-
+                    count++;
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
@@ -326,41 +269,37 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 TMapData tmapdata = new TMapData();
 
-                String Name[] = new String[7];
-                int Index[] = new int[7];
-                double Latitude[] = new double[7];
-                double Longitude[] = new double[7];
+                String Name[] = new String[6];
+                int Index[] = new int[6];
+                double Latitude[] = new double[6];
+                double Longitude[] = new double[6];
+                int i=0;
 
                 //locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
-                db = locationList.getWritableDatabase();
+                dbLct = locationList.getWritableDatabase();
                 //locationList.onCreate(db);
 
                 //Cursor c = db.query("LctList", null, null, null, null, null, null);
-                Cursor c = db.rawQuery("SELECT * FROM LctList", null);
-                c.moveToFirst();
+                Cursor c = dbLct.rawQuery("SELECT * FROM SavedLocation", null);
+                //c.moveToFirst();
 
-                while(c.moveToNext()) {
-                    LogManager.printLog("while 실행 되는지 확인");
-                    for(int i=0; i<7; i++) {
-                        LogManager.printLog("for " + i);
-                        Name[i] = c.getString(c.getColumnIndex("name"));
-                        Index[i] = c.getInt(c.getColumnIndex("idNumber"));
-                        Latitude[i] = c.getDouble(c.getColumnIndex("latitude"));
-                        Longitude[i] = c.getDouble(c.getColumnIndex("longitude"));
-                        LogManager.printLog(i + "번째 : " + Name[i] + " " + Index[i] + " " + Latitude[i] + " " + Longitude[i]);
-                    }
+                while(c.moveToNext()!=false) {
+                    LogManager.printLog("for " + i);
+                    Name[i] = c.getString(c.getColumnIndex("name"));
+                    Index[i] = c.getInt(c.getColumnIndex("_index"));
+                    Latitude[i] = c.getDouble(c.getColumnIndex("latitude"));
+                    Longitude[i] = c.getDouble(c.getColumnIndex("longitude"));
+                    LogManager.printLog(i + "번째 : " + Name[i] + " " + Index[i] + " " + Latitude[i] + " " + Longitude[i]);
+                    i++;
                 }
 
-                TMapPoint point0 = new TMapPoint(Latitude[0], Longitude[0]);
-                TMapPoint point1 = new TMapPoint(Latitude[1], Longitude[1]);
+                //길찾기 _ 최소비용
 
-                tmapdata.findPathData( point0, point1, new FindPathDataListenerCallback() {
-                   @Override
-                    public void onFindPathData(TMapPolyLine polyLine) {
-                       mMapView.addTMapPath(polyLine);
-                       LogManager.printLog("경로 ㅣ "  + polyLine.toString());
-                    }
-                });
+               String url = " https://apis.skplanetx.com/tmap/routes?version=1&appKey=" + mApiKey
+                        + "&startX=14368651.605895586&startY=4188210.3283031476&endX=14135591.321771959&endY=4518111.822510956"
+                        + "&resCoordType=EPSG3857&tollgateFareOption=8";
+
+                //JSONArray jarray = new JSONArray(url);
 
             }
         });
@@ -373,9 +312,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
-        db = locationList.getWritableDatabase();
-        locationList.onCreate(db);
+        dbLct = locationList.getWritableDatabase();
+        locationList.onCreate(dbLct);
         ContentValues values = new ContentValues();
 
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
@@ -385,48 +323,44 @@ public class MainActivity extends AppCompatActivity {
             for(int i=0; i<7;i++) {
                 if(outputName.equals(StartName[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
-                   // String tempLatitude = "" + StartLatitude[i];
-                   // String tempLongitude = "" + StartLongitude[i];
+                    values.put("_index", 0);
+                    values.put("name", StartName[i]);
                     values.put("latitude", StartLatitude[i]);
                     values.put("longitude", StartLongitude[i]);
-                    values.put("idNumber", 0);
-                    values.put("name", StartName[i]);
-                    db.insert("LocationList", null, values);
 
-                   // LogManager.printLog("입력된 name : " + StartName[i] + " latitude: " + tempLatitude
-                    //+ " longitude : " + tempLongitude);
+                    dbLct.insert("SavedLocation", null, values);
+
+                    LogManager.printLog("입력된 name : " + StartName[i] + " latitude: " + StartLatitude[i]
+                    + " longitude : " + StartLongitude[i]);
                 }
             }
 
             for(int i=0; i<7;i++) {
                 if(outputName.equals(FinishName[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
-                   // String tempLatitude = "" + FinishLatitude[i];
-                   // String tempLongitude = "" + FinishLongitude[i];
+                    values.put("_index", 2);
+                    values.put("name", FinishName[i]);
                     values.put("latitude", FinishLatitude[i]);
                     values.put("longitude", FinishLongitude[i]);
-                    values.put("idNumber", 2);
-                    values.put("name", FinishName[i]);
-                    db.insert("LocationList", null, values);
 
-                   // LogManager.printLog("입력된 name : " + FinishName[i] + " latitude: " + tempLatitude
-                   //         + " longitude : " + tempLongitude);
+                    dbLct.insert("SavedLocation", null, values);
+
+                    LogManager.printLog("입력된 name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
+                            + " longitude : " + FinishLongitude[i]);
                 }
             }
 
             for(int i=0; i<7;i++) {
                 if(outputName.equals(Stop1Name[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
-                    //String tempLatitude = "" + Stop1Latitude[i];
-                   // String tempLongitude = "" + Stop1Longitude[i];
+                    values.put("_index", 1);
+                    values.put("name", Stop1Name[i]);
                     values.put("latitude", Stop1Latitude[i]);
                     values.put("longitude", Stop1Longitude[i]);
-                    values.put("idNumber", 1);
-                    values.put("name", Stop1Name[i]);
-                    db.insert("LocationList", null, values);
+                    dbLct.insert("SavedLocation", null, values);
 
-                    //LogManager.printLog("입력된 name : " + Stop1Name[i] + " latitude: " + tempLatitude
-                   //         + " longitude : " + tempLongitude);
+                    LogManager.printLog("입력된 name : " + Stop1Name[i] + " latitude: " + Stop1Latitude[i]
+                            + " longitude : " + Stop1Longitude[i]);
                 }
             }
 
