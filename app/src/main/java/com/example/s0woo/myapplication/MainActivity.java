@@ -3,6 +3,7 @@ package com.example.s0woo.myapplication;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,11 +19,41 @@ import com.skp.Tmap.TMapData.FindAllPOIListenerCallback;
 import com.skp.Tmap.TMapView;
 import com.skp.Tmap.TMapPoint;
 
-import org.json.JSONArray;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.lang.String;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Map;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.xml.sax.SAXException;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
     final static int ACT_EDIT = 0;
 
-    DBLctList locationList = new DBLctList(MainActivity.this, "SavedLocation.db", null, 1);
-    SQLiteDatabase dbLct;
+    //DBLctList locationList = new DBLctList(MainActivity.this, "SavedLocation.db", null, 1);
+    //SQLiteDatabase dbLct;
 
     final String StartName[] = new String[7];
     final String StartAddress[] = new String[7];
@@ -66,6 +97,18 @@ public class MainActivity extends AppCompatActivity {
     final String Stop1Address[] = new String[7];
     final double Stop1Latitude[] = new double[7];
     final double Stop1Longitude[] = new double[7];
+
+    final String decidedStartName[] = new String[1];
+    final double decidedStartLatitude[] = new double[1];
+    final double decidedStartLongitude[] = new double[1];
+
+    final String decidedFinishName[] = new String[1];
+    final double decidedFinishLatitude[] = new double[1];
+    final double decidedFinishLongitude[] = new double[1];
+
+    final String decidedStopName[] = new String[4];
+    final double decidedStopLatitude[] = new double[4];
+    final double decidedStopLongitude[] = new double[4];
 
     int count = 0;
 
@@ -85,10 +128,8 @@ public class MainActivity extends AppCompatActivity {
 
         btnCar = (Button) findViewById(R.id.Car);
 
-
         mMapView = new TMapView(this);
         configureMapView();
-
 
         //출발지
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -101,29 +142,53 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-                    count++;
+
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
                         @Override
                         public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
 
-                            for (int i = 0; i < 7; i++) {
-                                TMapPOIItem item = poiItem.get(i);
+                            if(poiItem.size() < 7) {
+                                for (int i = 0; i < poiItem.size(); i++) {
 
-                                LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
-                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
-                                        "Point: " + item.getPOIPoint().toString());
+                                    TMapPOIItem item = poiItem.get(i);
 
-                                TMapPoint point = item.getPOIPoint();
-                                double Latitude = point.getLatitude();
-                                double Longitude = point.getLongitude();
+                                    LogManager.printLog(" POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
 
-                                StartName[i] = item.getPOIName().toString();
-                                StartAddress[i] = item.getPOIAddress().replace("null", "");
-                                StartLatitude[i] = Latitude;
-                                StartLongitude[i] = Longitude;
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    StartName[i] = item.getPOIName().toString();
+                                    StartAddress[i] = item.getPOIAddress().replace("null", "");
+                                    StartLatitude[i] = Latitude;
+                                    StartLongitude[i] = Longitude;
+                                }
                             }
+                            else {
+                                for (int i = 0; i < 7; i++) {
+
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog(" POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    StartName[i] = item.getPOIName().toString();
+                                    StartAddress[i] = item.getPOIAddress().replace("null", "");
+                                    StartLatitude[i] = Latitude;
+                                    StartLongitude[i] = Longitude;
+                                }
+
+                            }
+
 
                             intent.putExtra("Name0", StartName[0]);
                             intent.putExtra("Name1", StartName[1]);
@@ -158,28 +223,48 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "도착지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-                    count++;
+
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
                         @Override
                         public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
 
-                            for (int i = 0; i < 7; i++) {
-                                TMapPOIItem item = poiItem.get(i);
+                            if(poiItem.size() < 7) {
+                                for (int i = 0; i < poiItem.size(); i++) {
+                                    TMapPOIItem item = poiItem.get(i);
 
-                                LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
-                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
-                                        "Point: " + item.getPOIPoint().toString());
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
 
-                                TMapPoint point = item.getPOIPoint();
-                                double Latitude = point.getLatitude();
-                                double Longitude = point.getLongitude();
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
 
-                                FinishName[i] = item.getPOIName().toString();
-                                FinishAddress[i] = item.getPOIAddress().replace("null", "");
-                                FinishLatitude[i] = Latitude;
-                                FinishLongitude[i] = Longitude;
+                                    FinishName[i] = item.getPOIName().toString();
+                                    FinishAddress[i] = item.getPOIAddress().replace("null", "");
+                                    FinishLatitude[i] = Latitude;
+                                    FinishLongitude[i] = Longitude;
+                                }
+                            }
+                            else {
+                                for (int i = 0; i < 7; i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    FinishName[i] = item.getPOIName().toString();
+                                    FinishAddress[i] = item.getPOIAddress().replace("null", "");
+                                    FinishLatitude[i] = Latitude;
+                                    FinishLongitude[i] = Longitude;
+                                }
                             }
 
                             intent.putExtra("Name0", FinishName[0]);
@@ -198,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
                             intent.putExtra("Address5", FinishAddress[5]);
                             intent.putExtra("Address6", FinishAddress[6]);
                             startActivityForResult(intent, ACT_EDIT);
-
                         }
                     });
                 }
@@ -216,28 +300,48 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "경유지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
-                    count++;
+
                     TMapData tmapdata = new TMapData();
 
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
                         @Override
                         public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
 
-                            for (int i = 0; i < 7; i++) {
-                                TMapPOIItem item = poiItem.get(i);
+                            if(poiItem.size()<7) {
+                                for (int i = 0; i < poiItem.size(); i++) {
+                                    TMapPOIItem item = poiItem.get(i);
 
-                                LogManager.printLog("POI Name: " + item.getPOIName().toString() + ", " +
-                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
-                                        "Point: " + item.getPOIPoint().toString());
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
 
-                                TMapPoint point = item.getPOIPoint();
-                                double Latitude = point.getLatitude();
-                                double Longitude = point.getLongitude();
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
 
-                                Stop1Name[i] = item.getPOIName().toString();
-                                Stop1Address[i] = item.getPOIAddress().replace("null", "");
-                                Stop1Latitude[i] = Latitude;
-                                Stop1Longitude[i] = Longitude;
+                                    Stop1Name[i] = item.getPOIName().toString();
+                                    Stop1Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop1Latitude[i] = Latitude;
+                                    Stop1Longitude[i] = Longitude;
+                                }
+                            }
+                            else {
+                                for (int i = 0; i < 7; i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    Stop1Name[i] = item.getPOIName().toString();
+                                    Stop1Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop1Latitude[i] = Latitude;
+                                    Stop1Longitude[i] = Longitude;
+                                }
                             }
 
                             intent.putExtra("Name0", Stop1Name[0]);
@@ -267,44 +371,125 @@ public class MainActivity extends AppCompatActivity {
 
         btnCar.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                TMapData tmapdata = new TMapData();
-
-                String Name[] = new String[6];
-                int Index[] = new int[6];
-                double Latitude[] = new double[6];
-                double Longitude[] = new double[6];
-                int i=0;
+                //TMapData tmapdata = new TMapData();
 
                 //locationList = new LocationListDB(MainActivity.this, "LctList.db", null, 1);
-                dbLct = locationList.getWritableDatabase();
+                //dbLct = locationList.getWritableDatabase();
                 //locationList.onCreate(db);
 
                 //Cursor c = db.query("LctList", null, null, null, null, null, null);
-                Cursor c = dbLct.rawQuery("SELECT * FROM SavedLocation", null);
+                //Cursor c = dbLct.rawQuery("SELECT * FROM SavedLocation", null);
                 //c.moveToFirst();
 
-                while(c.moveToNext()!=false) {
-                    LogManager.printLog("for " + i);
+                /*
+                    c.moveToNext();
                     Name[i] = c.getString(c.getColumnIndex("name"));
                     Index[i] = c.getInt(c.getColumnIndex("_index"));
                     Latitude[i] = c.getDouble(c.getColumnIndex("latitude"));
                     Longitude[i] = c.getDouble(c.getColumnIndex("longitude"));
-                    LogManager.printLog(i + "번째 : " + Name[i] + " " + Index[i] + " " + Latitude[i] + " " + Longitude[i]);
-                    i++;
+                    c.moveToNext();
+                 */
+
+                LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ decidedStartLongitude[0] + "  " + decidedFinishName[0] + decidedFinishLatitude[0]+ decidedFinishLongitude[0]);
+                //getInfo(decidedStartName[0], decidedStartLatitude[0], decidedStartLongitude[0], decidedFinishName[0], decidedFinishLatitude[0], decidedFinishLongitude[0]);
+
+
+                final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                        + "&startX=" + decidedStartLatitude[0] + "&startY=" + decidedStartLongitude[0]
+                        + "&endX=" + decidedFinishLatitude[0] + "&endY=" + decidedFinishLongitude[0]
+                        + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";
+
+                //final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738&startX=14368651.605895586&startY=4188210.3283031476&endX=14135591.321771959&endY=4518111.822510956&reqCoordType=EPSG3857&resCoordType=EPSG3857&tollgateFareOption=8";
+
+                LogManager.printLog(urlString);
+
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            LogManager.printLog(urlString);
+                            URL url = new URL(urlString);
+
+                            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+
+                            http.setDefaultUseCaches(false);
+                            http.setDoInput(true);
+                            http.setDoOutput(true);
+                            http.setRequestMethod("POST");
+                            http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+
+                            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
+                            PrintWriter writer = new PrintWriter(outStream);
+                            writer.flush();
+
+                            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
+                            BufferedReader reader = new BufferedReader(tmp);
+                            StringBuilder builder = new StringBuilder();
+                            String strResult;
+                            while ((strResult = reader.readLine()) != null) {
+                                builder.append(strResult + "\n");
+
+                            }
+                            LogManager.printLog("result: " + builder.toString());
+
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                thread.start();
+             }
+        });
+    }
+
+
+    /*
+    public void getInfo(String tmpStartName, final double tmpStartLat, final double tmpStartLon,
+                        String tmpFinName, final double tmpFinLat, final double tmpFinLon) {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                HttpClient httpClient = new DefaultHttpClient();
+
+                //무료우선
+                String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=" + mApiKey +
+                        "&startX=" + tmpStartLat + "&startY=" + tmpStartLon +
+                        "&endX="+ tmpFinLat + "&endY=" + tmpFinLon +
+                        "&resCoordType=EPSG3857&tollgateFareOption=8";
+                LogManager.printLog(urlString);
+
+                try {
+                    URI url = new URI(urlString);
+
+                    HttpPost httpPost = new HttpPost();
+                    httpPost.setURI(url);
+
+                    HttpResponse response = httpClient.execute(httpPost);
+                    String responseString = EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
+                    LogManager.printLog("내용 " + responseString);
+
+                    JSONArray jarray = new JSONArray(responseString);
+
+                    //JSONObject jAr = new JSONObject(responseString);
+
+
+
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
 
-                //길찾기 _ 최소비용
-
-               String url = " https://apis.skplanetx.com/tmap/routes?version=1&appKey=" + mApiKey
-                        + "&startX=14368651.605895586&startY=4188210.3283031476&endX=14135591.321771959&endY=4518111.822510956"
-                        + "&resCoordType=EPSG3857&tollgateFareOption=8";
-
-                //JSONArray jarray = new JSONArray(url);
 
             }
-        });
+        };
 
     }
+    */
 
 
 
@@ -312,58 +497,81 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        dbLct = locationList.getWritableDatabase();
-        locationList.onCreate(dbLct);
-        ContentValues values = new ContentValues();
+        //dbLct = locationList.getWritableDatabase();
+        //locationList.onCreate(dbLct);
+        //ContentValues values = new ContentValues();
 
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
             LogManager.printLog("넘어온 값 : " + data.getStringExtra("OutName"));
             String outputName = data.getStringExtra("OutName");
 
-            for(int i=0; i<7;i++) {
-                if(outputName.equals(StartName[i])) {
+            LogManager.printLog("count: " + count);
+
+            //start
+            for (int i = 0; i < 7; i++) {
+                if (outputName.equals(StartName[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
+                    decidedStartName[0] = StartName[i];
+                    decidedStartLatitude[0] = StartLatitude[i];
+                    decidedStartLongitude[0] = StartLongitude[i];
+
+                    /*
                     values.put("_index", 0);
                     values.put("name", StartName[i]);
                     values.put("latitude", StartLatitude[i]);
                     values.put("longitude", StartLongitude[i]);
 
                     dbLct.insert("SavedLocation", null, values);
+                    */
 
-                    LogManager.printLog("입력된 name : " + StartName[i] + " latitude: " + StartLatitude[i]
-                    + " longitude : " + StartLongitude[i]);
+                    LogManager.printLog("입력된 name : " + StartName[i] + " : " + decidedStartName[0]
+                            + "\nlatitude: " + StartLatitude[i] + " : " + decidedStartLatitude[0]
+                            + "\nlongitude : " + StartLongitude[i] + " : " + decidedStartLongitude[0]);
                 }
             }
 
-            for(int i=0; i<7;i++) {
-                if(outputName.equals(FinishName[i])) {
+            //finish
+            for (int i = 0; i < 7; i++) {
+                if (outputName.equals(FinishName[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
+
+                    decidedFinishName[0] = FinishName[i];
+                    decidedFinishLatitude[0] = FinishLatitude[i];
+                    decidedFinishLongitude[0] = FinishLongitude[i];
+
+                    /*
                     values.put("_index", 2);
                     values.put("name", FinishName[i]);
                     values.put("latitude", FinishLatitude[i]);
                     values.put("longitude", FinishLongitude[i]);
 
                     dbLct.insert("SavedLocation", null, values);
+                    */
 
-                    LogManager.printLog("입력된 name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
+                    LogManager.printLog("count " + count + " 입력된 name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
                             + " longitude : " + FinishLongitude[i]);
                 }
             }
 
-            for(int i=0; i<7;i++) {
-                if(outputName.equals(Stop1Name[i])) {
+            for (int i = 0; i < 7; i++) {
+                if (outputName.equals(Stop1Name[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
+                    decidedStopName[0] = Stop1Name[i];
+                    decidedStopLatitude[0] = Stop1Latitude[i];
+                    decidedStopLongitude[0] = Stop1Longitude[i];
+                    /*
                     values.put("_index", 1);
                     values.put("name", Stop1Name[i]);
                     values.put("latitude", Stop1Latitude[i]);
                     values.put("longitude", Stop1Longitude[i]);
+
                     dbLct.insert("SavedLocation", null, values);
+                    */
 
                     LogManager.printLog("입력된 name : " + Stop1Name[i] + " latitude: " + Stop1Latitude[i]
                             + " longitude : " + Stop1Longitude[i]);
                 }
             }
-
         }
     }
 }
