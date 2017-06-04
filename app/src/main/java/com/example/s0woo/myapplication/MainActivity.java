@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     public ImageButton btnStop1;
 
     public Button btnCar;
+    public Button btnBus;
 
     final static int ACT_EDIT = 0;
 
@@ -112,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
 
     public String resultPath="";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         btnStop1 = (ImageButton) findViewById(R.id.stop1Btn);
 
         btnCar = (Button) findViewById(R.id.Car);
+        btnBus = (Button) findViewById(R.id.Bus);
 
         mMapView = new TMapView(this);
         configureMapView();
@@ -369,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
+        //TMAP 차 경로
         btnCar.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //TMapData tmapdata = new TMapData();
@@ -454,20 +455,93 @@ public class MainActivity extends AppCompatActivity {
                             e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
-                        } //catch (JSONException e) {
-                          //  e.printStackTrace();
-                        //}
+                        }
 
                     }
                 };
                 thread.start();
-
-
-
-
-
-
              }
+        });
+
+
+        //google api 대중교통 길찾기
+        btnBus.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ decidedStartLongitude[0] + "  " + decidedFinishName[0] + decidedFinishLatitude[0]+ decidedFinishLongitude[0]);
+
+                //X : longitude 경도, Y:latitude 위도
+                /*
+                final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                        + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
+                        + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
+                        + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";*/
+
+                final String urlString = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                + "&origins=" + decidedStartLatitude[0] + "," + decidedStartLongitude[0]
+                + "&destinations=" + decidedFinishLatitude[0] + "," + decidedFinishLongitude[0]
+                + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
+
+                //LogManager.printLog(urlString);
+
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            LogManager.printLog("thread 실행 " + urlString);
+                            URL url = new URL(urlString);
+
+                            StringBuffer sb = new StringBuffer();
+
+                            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+
+                            http.setDefaultUseCaches(false);
+                            http.setDoInput(true);
+                            http.setDoOutput(true);
+                            http.setRequestMethod("POST");
+                            http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+
+                            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
+                            PrintWriter writer = new PrintWriter(outStream);
+                            writer.flush();
+
+                            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
+                            BufferedReader reader = new BufferedReader(tmp);
+                            StringBuilder builder = new StringBuilder();
+                            String strResult;
+
+                            while ((strResult = reader.readLine()) != null) {
+                                builder.append(strResult);
+                            }
+
+                            LogManager.printLog("result: " + builder.toString());
+                            resultPath = builder.toString();
+
+                            String stringDuration = "duration";
+                            String stringValue = "value";
+                            String stringStatus = "status";
+                            //String stringQutation = "\"";
+
+                            String s1 = resultPath.substring((resultPath.indexOf(stringDuration)+stringDuration.length()+3),(resultPath.indexOf(stringStatus)-33));
+                            LogManager.printLog("s1 : " + s1);
+
+                            String s2 = s1.substring((s1.indexOf(stringValue)+stringValue.length()+4),s1.length());
+                            LogManager.printLog("time : " + s2);
+
+                            //status OK = 정상
+                            //String s3 = resultPath.substring((resultPath.indexOf(stringStatus)+stringStatus.length()+5),(resultPath.indexOf(stringQutation)));
+                            //LogManager.printLog("status: " + s3);
+
+
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                thread.start();
+            }
         });
     }
 
