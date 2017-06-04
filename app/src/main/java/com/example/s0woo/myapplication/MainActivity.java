@@ -110,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
     final double decidedStopLatitude[] = new double[4];
     final double decidedStopLongitude[] = new double[4];
 
-    int count = 0;
+    public String resultPath="";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -391,17 +392,16 @@ public class MainActivity extends AppCompatActivity {
                  */
 
                 LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ decidedStartLongitude[0] + "  " + decidedFinishName[0] + decidedFinishLatitude[0]+ decidedFinishLongitude[0]);
-                //getInfo(decidedStartName[0], decidedStartLatitude[0], decidedStartLongitude[0], decidedFinishName[0], decidedFinishLatitude[0], decidedFinishLongitude[0]);
 
-
+                //X : longitude, Y:latitude
                 final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
-                        + "&startX=" + decidedStartLatitude[0] + "&startY=" + decidedStartLongitude[0]
-                        + "&endX=" + decidedFinishLatitude[0] + "&endY=" + decidedFinishLongitude[0]
-                        + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";
-
-                //final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738&startX=14368651.605895586&startY=4188210.3283031476&endX=14135591.321771959&endY=4518111.822510956&reqCoordType=EPSG3857&resCoordType=EPSG3857&tollgateFareOption=8";
+                       + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
+                        + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
+                       + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";
 
                 LogManager.printLog(urlString);
+
+                //String pathResult;
 
                 Thread thread = new Thread() {
                     @Override
@@ -409,6 +409,8 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             LogManager.printLog(urlString);
                             URL url = new URL(urlString);
+
+                            StringBuffer sb = new StringBuffer();
 
                             HttpURLConnection http = (HttpURLConnection) url.openConnection();
 
@@ -426,74 +428,52 @@ public class MainActivity extends AppCompatActivity {
                             BufferedReader reader = new BufferedReader(tmp);
                             StringBuilder builder = new StringBuilder();
                             String strResult;
-                            while ((strResult = reader.readLine()) != null) {
-                                builder.append(strResult + "\n");
 
+                            while ((strResult = reader.readLine()) != null) {
+                                builder.append(strResult);
                             }
+
                             LogManager.printLog("result: " + builder.toString());
+                            resultPath = builder.toString();
+
+                            String stringTotalTime = "totalTime";
+                            String stringTotalFare = "totalFare";
+                            String stringTaxiFare = "taxiFare";
+                            String stringIndex = "index";
+
+                            String s1 = resultPath.substring((resultPath.indexOf(stringTotalTime)+stringTotalTime.length()+3),(resultPath.indexOf(stringTotalFare)-8));
+                            LogManager.printLog("totaltime : " + s1);
+
+                            String s2 = resultPath.substring((resultPath.indexOf(stringTotalFare)+stringTotalTime.length()+3),(resultPath.indexOf(stringTaxiFare)-8));
+                            LogManager.printLog("fare : " + s2);
+
+                            String s3 = resultPath.substring((resultPath.indexOf(stringTaxiFare)+stringTotalTime.length()+3),(resultPath.indexOf(stringIndex)-8));
+                            LogManager.printLog("taxi: " + s3);
 
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
-                        }
+                        } //catch (JSONException e) {
+                          //  e.printStackTrace();
+                        //}
+
                     }
                 };
                 thread.start();
+
+
+
+
+
+
              }
         });
     }
 
 
-    /*
-    public void getInfo(String tmpStartName, final double tmpStartLat, final double tmpStartLon,
-                        String tmpFinName, final double tmpFinLat, final double tmpFinLon) {
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                HttpClient httpClient = new DefaultHttpClient();
 
-                //무료우선
-                String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=" + mApiKey +
-                        "&startX=" + tmpStartLat + "&startY=" + tmpStartLon +
-                        "&endX="+ tmpFinLat + "&endY=" + tmpFinLon +
-                        "&resCoordType=EPSG3857&tollgateFareOption=8";
-                LogManager.printLog(urlString);
-
-                try {
-                    URI url = new URI(urlString);
-
-                    HttpPost httpPost = new HttpPost();
-                    httpPost.setURI(url);
-
-                    HttpResponse response = httpClient.execute(httpPost);
-                    String responseString = EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
-                    LogManager.printLog("내용 " + responseString);
-
-                    JSONArray jarray = new JSONArray(responseString);
-
-                    //JSONObject jAr = new JSONObject(responseString);
-
-
-
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-
-            }
-        };
-
-    }
-    */
-
-
-
-    //값 받아오기
+    // SubAcitivy 값 받아오기
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -504,8 +484,6 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
             LogManager.printLog("넘어온 값 : " + data.getStringExtra("OutName"));
             String outputName = data.getStringExtra("OutName");
-
-            LogManager.printLog("count: " + count);
 
             //start
             for (int i = 0; i < 7; i++) {
@@ -524,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
                     dbLct.insert("SavedLocation", null, values);
                     */
 
-                    LogManager.printLog("입력된 name : " + StartName[i] + " : " + decidedStartName[0]
+                    LogManager.printLog("start 입력된 name : " + StartName[i] + " : " + decidedStartName[0]
                             + "\nlatitude: " + StartLatitude[i] + " : " + decidedStartLatitude[0]
                             + "\nlongitude : " + StartLongitude[i] + " : " + decidedStartLongitude[0]);
                 }
@@ -548,8 +526,9 @@ public class MainActivity extends AppCompatActivity {
                     dbLct.insert("SavedLocation", null, values);
                     */
 
-                    LogManager.printLog("count " + count + " 입력된 name : " + FinishName[i] + " latitude: " + FinishLatitude[i]
-                            + " longitude : " + FinishLongitude[i]);
+                    LogManager.printLog("finish 입력된 name : " + FinishName[i] + ":"  + decidedFinishName[0]
+                            + " latitude: " + FinishLatitude[i] + ":" + decidedFinishLatitude[0]
+                            + " longitude : " + FinishLongitude[i] + ":" + decidedFinishLongitude[0]);
                 }
             }
 
