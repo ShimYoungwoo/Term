@@ -19,24 +19,9 @@ import com.skp.Tmap.TMapData.FindAllPOIListenerCallback;
 import com.skp.Tmap.TMapView;
 import com.skp.Tmap.TMapPoint;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.lang.String;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.List;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +43,12 @@ public class MainActivity extends AppCompatActivity {
     public EditText editStop1;
     public ImageButton btnStop1;
 
+    public EditText editStop2;
+    public ImageButton btnStop2;
+
+    public EditText editStop3;
+    public ImageButton btnStop3;
+
     public Button btnCar;
     public Button btnBus;
 
@@ -66,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     //DBLctList locationList = new DBLctList(MainActivity.this, "SavedLocation.db", null, 1);
     //SQLiteDatabase dbLct;
 
+    // 주소 목록
     final String StartName[] = new String[7];
     final String StartAddress[] = new String[7];
     final double StartLatitude[] = new double[7];
@@ -96,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     final double Stop4Latitude[] = new double[7];
     final double Stop4Longitude[] = new double[7];
 
-
+    //보기 목록에서 선택된 주소의 이름과 위도 경도
     final String decidedStartName[] = new String[1];
     final double decidedStartLatitude[] = new double[1];
     final double decidedStartLongitude[] = new double[1];
@@ -109,41 +101,13 @@ public class MainActivity extends AppCompatActivity {
     final double decidedStopLatitude[] = new double[4];
     final double decidedStopLongitude[] = new double[4];
 
+    // 도착지 라벨 카운트
     int cntInput = 0;
-    int tmpi = 0;
 
-    /* api 이용해서 찾은 최대 갯수
-    start-1 0
-    start-2 1
-    start-3 2
-    start-4 3
-    1-2     4
-    1-3     5
-    1-4     6
-    2-3     7
-    2-4     8
-    3-4     9
-    1-f    10
-    2-f    11
-    3-f    12
-    4-f    13
-    */
-    final int carFreeCost[] = new int[14]; // 무료우선 비용
-    final int carFreeTaxi[] = new int[14]; // 무료우선 택시비용
-    final int carFreeTime[] = new int[14]; // 무료우선 시간
+    public String urlCarF = "";
+    public String urlCarS = "";
+    public String urlBusS = "";
 
-    final int carShortTime[] = new int[14]; //최소시간 시간
-    final int carShortCost[] = new int[14]; //최소시간 비용
-    final int carShortTaxi[] = new int[14]; //최소시간 택시비용
-
-    final int busTime[] = new int[14]; //대중교통 최소시간
-
-    public String CarResultPathF = "";
-    public String CarResultPathS = "";
-    public String BusResultPathS = "";
-
-    String urlFree[] = new String[14];
-    String urlShort[] = new String[14];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +123,12 @@ public class MainActivity extends AppCompatActivity {
         editStop1 = (EditText) findViewById(R.id.stop1Edit);
         btnStop1 = (ImageButton) findViewById(R.id.stop1Btn);
 
+        editStop2 = (EditText) findViewById(R.id.stop2Edit);
+        btnStop2 = (ImageButton) findViewById(R.id.stop2Btn);
+
+        editStop3 = (EditText) findViewById(R.id.stop3Edit);
+        btnStop3 = (ImageButton) findViewById(R.id.stop3Btn);
+
         btnCar = (Button) findViewById(R.id.Car);
         btnBus = (Button) findViewById(R.id.Bus);
 
@@ -172,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
                 final Intent intent = new Intent(MainActivity.this, SubActivity.class);
 
+                //입력된 값이 없으면
                 if (str == null || str.length() == 0) {
                     Toast.makeText(getApplicationContext(), "출발지를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
@@ -182,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                     tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
                         @Override
                         public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
-
+                            //item 수가 7개 보다 적다면 있는 만큼 가지고오기
                             if(poiItem.size() < 7) {
                                 for (int i = 0; i < poiItem.size(); i++) {
 
@@ -202,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
                                     StartLongitude[i] = Longitude;
                                 }
                             }
+                            //item수가 7개보다 많다면 7개만 갖고오기
                             else {
                                 for (int i = 0; i < 7; i++) {
 
@@ -222,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
+                            //findAllPOI를 이용해서 찾은 최대 7개의 값을 목록창으로 넘기기
                             intent.putExtra("Name0", StartName[0]);
                             intent.putExtra("Name1", StartName[1]);
                             intent.putExtra("Name2", StartName[2]);
@@ -400,6 +373,161 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        btnStop2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                String str = editStop2.getText().toString();
+
+                final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
+                if (str == null || str.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "경유지를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                } else {
+                    //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
+                    cntInput++;
+
+                    TMapData tmapdata = new TMapData();
+
+                    tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
+                        @Override
+                        public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
+
+                            if(poiItem.size()<7) {
+                                for (int i = 0; i < poiItem.size(); i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    Stop2Name[i] = item.getPOIName().toString();
+                                    Stop2Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop2Latitude[i] = Latitude;
+                                    Stop2Longitude[i] = Longitude;
+                                }
+                            }
+                            else {
+                                for (int i = 0; i < 7; i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    Stop2Name[i] = item.getPOIName().toString();
+                                    Stop2Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop2Latitude[i] = Latitude;
+                                    Stop2Longitude[i] = Longitude;
+                                }
+                            }
+
+                            intent.putExtra("Name0", Stop2Name[0]);
+                            intent.putExtra("Name1", Stop2Name[1]);
+                            intent.putExtra("Name2", Stop2Name[2]);
+                            intent.putExtra("Name3", Stop2Name[3]);
+                            intent.putExtra("Name4", Stop2Name[4]);
+                            intent.putExtra("Name5", Stop2Name[5]);
+                            intent.putExtra("Name6", Stop2Name[6]);
+
+                            intent.putExtra("Address0", Stop2Address[0]);
+                            intent.putExtra("Address1", Stop2Address[1]);
+                            intent.putExtra("Address2", Stop2Address[2]);
+                            intent.putExtra("Address3", Stop2Address[3]);
+                            intent.putExtra("Address4", Stop2Address[4]);
+                            intent.putExtra("Address5", Stop2Address[5]);
+                            intent.putExtra("Address6", Stop2Address[6]);
+                            startActivityForResult(intent, ACT_EDIT);
+                        }
+                    });
+                }
+            }
+        });
+
+
+        btnStop3.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                String str = editStop3.getText().toString();
+
+                final Intent intent = new Intent(MainActivity.this, SubActivity.class);
+
+                if (str == null || str.length() == 0) {
+                    Toast.makeText(getApplicationContext(), "경유지를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                } else {
+                    //Toast.makeText(getApplicationContext(), "입력성공 : " + str, Toast.LENGTH_SHORT).show();
+                    cntInput++;
+
+                    TMapData tmapdata = new TMapData();
+
+                    tmapdata.findAllPOI(str, new FindAllPOIListenerCallback() {
+                        @Override
+                        public void onFindAllPOI(ArrayList<TMapPOIItem> poiItem) {
+
+                            if(poiItem.size()<7) {
+                                for (int i = 0; i < poiItem.size(); i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    Stop3Name[i] = item.getPOIName().toString();
+                                    Stop3Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop3Latitude[i] = Latitude;
+                                    Stop3Longitude[i] = Longitude;
+                                }
+                            }
+                            else {
+                                for (int i = 0; i < 7; i++) {
+                                    TMapPOIItem item = poiItem.get(i);
+
+                                    LogManager.printLog( " POI Name: " + item.getPOIName().toString() + ", " +
+                                            "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                            "Point: " + item.getPOIPoint().toString());
+
+                                    TMapPoint point = item.getPOIPoint();
+                                    double Latitude = point.getLatitude();
+                                    double Longitude = point.getLongitude();
+
+                                    Stop3Name[i] = item.getPOIName().toString();
+                                    Stop3Address[i] = item.getPOIAddress().replace("null", "");
+                                    Stop3Latitude[i] = Latitude;
+                                    Stop3Longitude[i] = Longitude;
+                                }
+                            }
+
+                            intent.putExtra("Name0", Stop3Name[0]);
+                            intent.putExtra("Name1", Stop3Name[1]);
+                            intent.putExtra("Name2", Stop3Name[2]);
+                            intent.putExtra("Name3", Stop3Name[3]);
+                            intent.putExtra("Name4", Stop3Name[4]);
+                            intent.putExtra("Name5", Stop3Name[5]);
+                            intent.putExtra("Name6", Stop3Name[6]);
+
+                            intent.putExtra("Address0", Stop3Address[0]);
+                            intent.putExtra("Address1", Stop3Address[1]);
+                            intent.putExtra("Address2", Stop3Address[2]);
+                            intent.putExtra("Address3", Stop3Address[3]);
+                            intent.putExtra("Address4", Stop3Address[4]);
+                            intent.putExtra("Address5", Stop3Address[5]);
+                            intent.putExtra("Address6", Stop3Address[6]);
+                            startActivityForResult(intent, ACT_EDIT);
+                        }
+                    });
+                }
+            }
+        });
+
 
         //TMAP 차 경로
         btnCar.setOnClickListener(new View.OnClickListener() {
@@ -426,46 +554,47 @@ public class MainActivity extends AppCompatActivity {
                 //final String urlFree[] = new String[14];
                 //final String urlShort[] = new String[14];
 
-                int urlcnt=0;
 
                 //경유지 없는경우
                 if(cntInput==1) {
                     LogManager.printLog("경유지X -> 결과 1개");
                     //X : longitude, Y:latitude
                     //무료우선
-                    urlFree[0] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                    urlCarF = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                             + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
                             + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
                             + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8&searchOption=1";
                     //최소시간
-                    urlShort[0] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                    urlCarS = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                             + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
                             + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
                             + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&searchOption=2";
-                    LogManager.printLog("경유지없음 : " + urlFree[0]);
-                    LogManager.printLog(urlShort[0]);
+
+                    FindLctResult.findCarFree(decidedStartName[0], 0, decidedFinishName[0], 1, urlCarF);
+                    FindLctResult.findCarShort(decidedStartName[0], 0, decidedFinishName[0], 1, urlCarS);
                 }
 
                 //StartPoint to Stop
                 for(int i=0; i<4; i++) {
                     if(decidedStopName[i]!=null) {
-                        LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ " " +decidedStartLongitude[0] +
-                                " stop" +i + " " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]);
+                        //LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ " " +decidedStartLongitude[0] +
+                        //        " stop" +i + " " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]);
 
                         //X : longitude, Y:latitude
                         //무료우선
-                        urlFree[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                        urlCarF = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                                 + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
                                 + "&endX=" + decidedStopLongitude[i] + "&endY=" + decidedStopLatitude[i]
                                 + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8&searchOption=1";
                         //최소시간
-                        urlShort[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                        urlCarS = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                                 + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
                                 + "&endX=" + decidedStopLongitude[i] + "&endY=" + decidedStopLatitude[i]
                                 + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&searchOption=2";
-                        LogManager.printLog("start to stop" + i + ": " +  urlFree[urlcnt]);
-                        LogManager.printLog(urlShort[urlcnt]);
-                        urlcnt++;
+
+                        //LogManager.printLog("Start Label 0 to Stop" + (i+1) +": " + urlCarF);
+                        FindLctResult.findCarFree(decidedStartName[0], 0, decidedStopName[i], (i+1), urlCarF);
+                        FindLctResult.findCarShort(decidedStartName[0], 0, decidedStopName[i], (i+1), urlCarS);
                     }
                     else {
                         break;
@@ -476,126 +605,64 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0; i<3; i++) {
                     for(int j=i+1; j<4; j++) {
                         if(decidedStopName[i]!=null && decidedStopName[j]!=null) {
-                            LogManager.printLog("stop" + i + ": " + decidedStopName[i] + " " + decidedStopLatitude[i]+ " " +decidedStopLongitude[i]
-                                    + " stop" + j + ": " + decidedStopName[j] + decidedStopLatitude[j]+ " " +decidedStopLongitude[j]);
+                           // LogManager.printLog("stop" + i + ": " + decidedStopName[i] + " " + decidedStopLatitude[i]+ " " +decidedStopLongitude[i]
+                             //       + " stop" + j + ": " + decidedStopName[j] + decidedStopLatitude[j]+ " " +decidedStopLongitude[j]);
 
                             //X : longitude, Y:latitude
                             //무료우선
-                            urlFree[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                            urlCarF= "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                                     + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[i]
                                     + "&endX=" + decidedStopLongitude[j] + "&endY=" + decidedStopLatitude[j]
                                     + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8&searchOption=1";
                             //최소시간
-                            urlShort[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                            urlCarS = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                                     + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[i]
                                     + "&endX=" + decidedStopLongitude[j] + "&endY=" + decidedStopLatitude[j]
                                     + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&searchOption=2";
-                            urlcnt++;
+
+                            //LogManager.printLog("StopLabel" + i+1 + " to Stop" + j+1 +": " + urlCarF);
+                            FindLctResult.findCarFree(decidedStopName[i], (i+1) , decidedStopName[j], (j+1), urlCarF);
+                            FindLctResult.findCarShort(decidedStopName[i], (i+1), decidedStopName[j], (j+1), urlCarS);
                         }
                         else {
                             break;
                         }
-
                     }
                 }
 
                 //Stop to Finish
                 for(int i=0; i<4; i++) {
                     if(decidedStopName[i]!=null) {
-                        LogManager.printLog("stop " + i + " : " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]
-                                + " finish: " + decidedFinishName[0] + decidedFinishLatitude[0] + " " + decidedFinishLongitude[0]);
+                        //LogManager.printLog("stop " + i + " : " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]
+                        //        + " finish: " + decidedFinishName[0] + decidedFinishLatitude[0] + " " + decidedFinishLongitude[0]);
                         //X : longitude, Y:latitude
                         //무료우선
-                        urlFree[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
-                                + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[0]
-                                + "&endX=" + decidedFinishLongitude[i] + "&endY=" + decidedFinishLatitude[0]
+                        urlCarF = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                                + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[i]
+                                + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
                                 + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8&searchOption=1";
                         //최소시간
-                        urlShort[urlcnt] = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
-                                + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[0]
-                                + "&endX=" + decidedFinishLongitude[i] + "&endY=" + decidedFinishLatitude[0]
+                        urlCarS = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
+                                + "&startX=" + decidedStopLongitude[i]+ "&startY=" + decidedStopLatitude[i]
+                                + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
                                 + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&searchOption=2";
-                        LogManager.printLog("stop to finish" + i + ": " +  urlFree[urlcnt]);
-                        LogManager.printLog(urlShort[urlcnt]);
-                        urlcnt++;
+
+                        //LogManager.printLog("StopLabel" + (i+1) + " to finish" +": " + urlCarF);
+                        FindLctResult.findCarFree(decidedStopName[i], i+1 , decidedFinishName[0], cntInput, urlCarF);
+                        FindLctResult.findCarShort(decidedStopName[i], i+1, decidedFinishName[0], cntInput, urlCarS);
                     }
                     else {
                         break;
                     }
                 }
 
-                //X : longitude, Y:latitude
                 //무료우선
                 /*
                 final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
                        + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
                         + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
                        + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";
-
-                LogManager.printLog(urlString);
                 */
-                //String pathResult;
-
-                for(tmpi = 0 ; tmpi < urlcnt ; tmpi++) {
-                    Thread thread = new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                LogManager.printLog("무료우선 : " + urlFree[tmpi]);
-                                URL urlF = new URL(urlFree[tmpi]);
-
-                                StringBuffer sbF = new StringBuffer();
-
-                                HttpURLConnection httpF = (HttpURLConnection) urlF.openConnection();
-
-                                httpF.setDefaultUseCaches(false);
-                                httpF.setDoInput(true);
-                                httpF.setDoOutput(true);
-                                httpF.setRequestMethod("POST");
-                                httpF.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-
-                                OutputStreamWriter outStreamF = new OutputStreamWriter(httpF.getOutputStream(), "UTF-8");
-                                PrintWriter writerF = new PrintWriter(outStreamF);
-                                writerF.flush();
-
-                                InputStreamReader tmpF = new InputStreamReader(httpF.getInputStream(), "UTF-8");
-                                BufferedReader readerF = new BufferedReader(tmpF);
-                                StringBuilder builderF = new StringBuilder();
-                                String strResultF;
-
-                                while ((strResultF = readerF.readLine()) != null) {
-                                    builderF.append(strResultF);
-                                }
-
-                                LogManager.printLog("FREE result: " + builderF.toString());
-                                CarResultPathF = builderF.toString();
-
-                                String stringTotalTime = "totalTime";
-                                String stringTotalFare = "totalFare";
-                                String stringTaxiFare = "taxiFare";
-                                String stringIndex = "index";
-
-                                String s1 = CarResultPathF.substring((CarResultPathF.indexOf(stringTotalTime)+stringTotalTime.length()+3),(CarResultPathF.indexOf(stringTotalFare)-8));
-                                LogManager.printLog("totaltime : " + s1);
-
-                                String s2 = CarResultPathF.substring((CarResultPathF.indexOf(stringTotalFare)+stringTotalTime.length()+3),(CarResultPathF.indexOf(stringTaxiFare)-8));
-                                LogManager.printLog("fare : " + s2);
-
-                                String s3 = CarResultPathF.substring((CarResultPathF.indexOf(stringTaxiFare)+stringTotalTime.length()+3),(CarResultPathF.indexOf(stringIndex)-8));
-                                LogManager.printLog("taxi: " + s3);
-
-                            } catch (MalformedURLException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    };
-                    thread.start();
-
-                }
-
 
              }
         });
@@ -605,82 +672,86 @@ public class MainActivity extends AppCompatActivity {
         btnBus.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ decidedStartLongitude[0] + "  " + decidedFinishName[0] + decidedFinishLatitude[0]+ decidedFinishLongitude[0]);
+                //LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ decidedStartLongitude[0] + "  " + decidedFinishName[0] + decidedFinishLatitude[0]+ decidedFinishLongitude[0]);
 
-                //X : longitude 경도, Y:latitude 위도
                 /*
-                final String urlString = "https://apis.skplanetx.com/tmap/routes?version=1&appKey=73a7a315-a395-350e-9bff-14b10cd0f738"
-                        + "&startX=" + decidedStartLongitude[0]+ "&startY=" + decidedStartLatitude[0]
-                        + "&endX=" + decidedFinishLongitude[0] + "&endY=" + decidedFinishLatitude[0]
-                        + "&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&tollgateFareOption=8";*/
-
                 final String urlString = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
                 + "&origins=" + decidedStartLatitude[0] + "," + decidedStartLongitude[0]
                 + "&destinations=" + decidedFinishLatitude[0] + "," + decidedFinishLongitude[0]
                 + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
+                */
 
-                //LogManager.printLog(urlString);
+                //경유지 없는경우
+                if(cntInput==1) {
+                    //LogManager.printLog("경유지X -> 결과 1개");
 
-                Thread thread = new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            LogManager.printLog("thread 실행 " + urlString);
-                            URL url = new URL(urlString);
+                    urlBusS = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                            + "&origins=" + decidedStartLatitude[0] + "," + decidedStartLongitude[0]
+                            + "&destinations=" + decidedFinishLatitude[0] + "," + decidedFinishLongitude[0]
+                            + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
 
-                            StringBuffer sb = new StringBuffer();
+                    FindLctResult.findBusShort(decidedStartName[0], 0, decidedFinishName[0], 1, urlBusS);
+                }
 
-                            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+                //StartPoint to Stop
+                for(int i=0; i<4; i++) {
+                    if(decidedStopName[i]!=null) {
+                        //LogManager.printLog("start : " + decidedStartName[0] + decidedStartLatitude[0]+ " " +decidedStartLongitude[0] +
+                        //        " stop" +i + " " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]);
 
-                            http.setDefaultUseCaches(false);
-                            http.setDoInput(true);
-                            http.setDoOutput(true);
-                            http.setRequestMethod("POST");
-                            http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+                        urlBusS = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                                + "&origins=" + decidedStartLatitude[0] + "," + decidedStartLongitude[0]
+                                + "&destinations=" + decidedStopLatitude[i] + "," + decidedStopLongitude[i]
+                                + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
 
-                            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
-                            PrintWriter writer = new PrintWriter(outStream);
-                            writer.flush();
+                        FindLctResult.findBusShort(decidedStartName[0], 0, decidedStopName[i], (i+1), urlBusS);
+                    }
+                    else {
+                        break;
+                    }
+                }
 
-                            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
-                            BufferedReader reader = new BufferedReader(tmp);
-                            StringBuilder builder = new StringBuilder();
-                            String strResult;
+                //Stop to Stop
+                for(int i=0; i<3; i++) {
+                    for(int j=i+1; j<4; j++) {
+                        if(decidedStopName[i]!=null && decidedStopName[j]!=null) {
+                            // LogManager.printLog("stop" + i + ": " + decidedStopName[i] + " " + decidedStopLatitude[i]+ " " +decidedStopLongitude[i]
+                            //       + " stop" + j + ": " + decidedStopName[j] + decidedStopLatitude[j]+ " " +decidedStopLongitude[j]);
 
-                            while ((strResult = reader.readLine()) != null) {
-                                builder.append(strResult);
-                            }
+                            urlBusS = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                                    + "&origins=" + decidedStopLatitude[i] + "," + decidedStopLongitude[i]
+                                    + "&destinations=" + decidedStopLatitude[j] + "," + decidedStopLongitude[j]
+                                    + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
 
-                            LogManager.printLog("result: " + builder.toString());
-                            BusResultPathS = builder.toString();
-
-                            String stringDuration = "duration";
-                            String stringValue = "value";
-                            String stringStatus = "status";
-                            //String stringQutation = "\"";
-
-                            String s1 = BusResultPathS.substring((BusResultPathS.indexOf(stringDuration)+stringDuration.length()+3),(BusResultPathS.indexOf(stringStatus)-33));
-                            LogManager.printLog("s1 : " + s1);
-
-                            String s2 = s1.substring((s1.indexOf(stringValue)+stringValue.length()+4),s1.length());
-                            LogManager.printLog("time : " + s2);
-
-                            //status OK = 정상
-                            //String s3 = resultPath.substring((resultPath.indexOf(stringStatus)+stringStatus.length()+5),(resultPath.indexOf(stringQutation)));
-                            //LogManager.printLog("status: " + s3);
-
-                        } catch (MalformedURLException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                            FindLctResult.findBusShort(decidedStopName[i], (i+1), decidedStopName[j], (j+1), urlBusS);
+                        }
+                        else {
+                            break;
                         }
                     }
-                };
-                thread.start();
+                }
+
+                //Stop to Finish
+                for(int i=0; i<4; i++) {
+                    if(decidedStopName[i]!=null) {
+                        //LogManager.printLog("stop " + i + " : " + decidedStopName[i] + decidedStopLatitude[i]+ " " + decidedStopLongitude[i]
+                        //        + " finish: " + decidedFinishName[0] + decidedFinishLatitude[0] + " " + decidedFinishLongitude[0]);
+
+                        urlBusS = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                                + "&origins=" + decidedStopLatitude[i] + "," + decidedStopLongitude[i]
+                                + "&destinations=" + decidedFinishLatitude[0] + "," + decidedFinishLongitude[0]
+                                + "&key=AIzaSyBN7CGEqgSPoED5753LZG3DQJJ3umuGSrk" + "&language=ko" + "&mode=transit&transit_mode=subway";
+
+                        FindLctResult.findBusShort(decidedStopName[i], (i+1), decidedFinishName[0], cntInput, urlBusS);
+                    }
+                    else {
+                        break;
+                    }
+                }
+
             }
         });
     }
-
 
 
     // SubAcitivy 값 받아오기
@@ -692,6 +763,7 @@ public class MainActivity extends AppCompatActivity {
         //ContentValues values = new ContentValues();
 
         if (requestCode == ACT_EDIT && resultCode == RESULT_OK) {
+            //목록 화면에서 선택된 값값
             LogManager.printLog("넘어온 값 : " + data.getStringExtra("OutName"));
             String outputName = data.getStringExtra("OutName");
 
@@ -727,15 +799,6 @@ public class MainActivity extends AppCompatActivity {
                     decidedFinishLatitude[0] = FinishLatitude[i];
                     decidedFinishLongitude[0] = FinishLongitude[i];
 
-                    /*
-                    values.put("_index", 2);
-                    values.put("name", FinishName[i]);
-                    values.put("latitude", FinishLatitude[i]);
-                    values.put("longitude", FinishLongitude[i]);
-
-                    dbLct.insert("SavedLocation", null, values);
-                    */
-
                     LogManager.printLog("finish 입력된 name : " + FinishName[i] + ":"  + decidedFinishName[0]
                             + " latitude: " + FinishLatitude[i] + ":" + decidedFinishLatitude[0]
                             + " longitude : " + FinishLongitude[i] + ":" + decidedFinishLongitude[0]);
@@ -754,7 +817,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            /*
+
             for (int i = 0; i < 7; i++) {
                 if (outputName.equals(Stop2Name[i])) {
                     LogManager.printLog("stop2: " + data.getStringExtra("OutName"));
@@ -779,6 +842,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /*
             for (int i = 0; i < 7; i++) {
                 if (outputName.equals(Stop4Name[i])) {
                     LogManager.printLog("start : " + data.getStringExtra("OutName"));
